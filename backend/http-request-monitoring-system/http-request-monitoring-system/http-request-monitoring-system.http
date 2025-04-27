@@ -1,0 +1,6 @@
+@http_request_monitoring_system_HostAddress = http://localhost:5012
+
+GET {{http_request_monitoring_system_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

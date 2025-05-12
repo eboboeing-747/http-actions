@@ -5,35 +5,20 @@ using System.Runtime.CompilerServices;
 
 namespace http_request_monitoring_system
 {
+    public delegate string Route(string body);
+
     public class HttpServer
     {
-        public int GetAmount = 0;
-        public int PostAmount = 0;
         public HttpListener listener = new HttpListener();
         public Thread listenerThread;
-        public Dictionary<int, string> jsonData = new Dictionary<int, string>();
         public DateTime startTime;
+        public Dictionary<string, Route> GetRouter { get; set; } = new Dictionary<string, Route>();
+        public Dictionary<string, Route> PostRouter { get; set; } = new Dictionary<string, Route>();
+        public Dictionary<string, Dictionary<string, Route>> Router { get; set; } = new Dictionary<string, Dictionary<string, Route>>();
 
         public HttpServer()
         {
             this.listenerThread = new Thread(HandleRequest);
-        }
-
-        public string HandleGet()
-        {
-            string response = $"{{\"requestAmount\": {this.GetAmount + this.PostAmount},\"uptime\": {this.Uptime}}}";
-            this.GetAmount++;
-
-            return response;
-        }
-
-        public string HandlePost(string contents, out int id)
-        {
-            id = this.jsonData.Count;
-            this.jsonData.Add(id, contents);
-            this.PostAmount++;
-
-            return $"{{\"id\": \"{id}\"}}";
         }
 
         public void HandleRequest()
@@ -49,13 +34,14 @@ namespace http_request_monitoring_system
                 string contents = reader.ReadToEnd();
                 string responseString = string.Empty;
                 string method = request.HttpMethod;
+                string? route = request.RawUrl;
 
-                if (method == "GET")
-                    responseString = this.HandleGet();
-                else if (method == "POST")
-                    responseString = this.HandlePost(contents, out int id);
+                if (route == null)
+                    responseString = $"failed to get route";
+                else if (!Router[method].ContainsKey(route))
+                    responseString = $"no \"{method}\" for \"{route}\"";
                 else
-                    return; // tmp
+                    responseString = this.Router[method][route](contents);
 
                 HttpListenerResponse response = context.Response;
                 byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);

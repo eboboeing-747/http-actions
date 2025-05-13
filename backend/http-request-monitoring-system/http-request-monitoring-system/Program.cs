@@ -8,12 +8,6 @@ namespace http_request_monitoring_system
 
         public static void Main(string[] args)
         {
-            /*
-            server.GetRouter.Add("/", serverActions.GetServerInfo);
-            server.PostRouter.Add("/getData", serverActions.GetData);
-            server.PostRouter.Add("/addData", serverActions.AddData);
-            */
-
             Dictionary<string, Route> getRouter = new Dictionary<string, Route>();
             getRouter.Add("/", serverActions.GetServerInfo);
 

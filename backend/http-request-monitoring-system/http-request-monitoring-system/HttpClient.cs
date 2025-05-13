@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Net;
+using System.Runtime.CompilerServices;
 
 namespace http_request_monitoring_system
 {
@@ -8,9 +9,6 @@ namespace http_request_monitoring_system
 
         async public Task<string> MakeRequest(string methodStr, string uri, string body)
         {
-            // string server = "http://localhost:3000/register";
-
-            // body = "{\"name\": \"name-0\", \"password\": \"password-0\"}";
             // uri = "https://jsonplaceholder.typicode.com/posts";
             HttpMethod method = new HttpMethod(methodStr);
 
@@ -18,6 +16,13 @@ namespace http_request_monitoring_system
             requestMessage.Content = new StringContent(body);
             requestMessage.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
+            HttpResponseMessage response = await client.SendAsync(requestMessage);
+            HttpStatusCode status = response.StatusCode;
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            return $"{(int)status} {status}\r\n\r\n{responseBody}";
+
+            /*
             try
             {
                 using HttpResponseMessage response = await client.SendAsync(requestMessage);
@@ -35,6 +40,7 @@ namespace http_request_monitoring_system
 
                 return e.Message;
             }
+            */
         }
     }
 }

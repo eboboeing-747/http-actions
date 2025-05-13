@@ -1,5 +1,6 @@
 ﻿using http_request_monitoring_system.Objects;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Diagnostics;
 using System.Net;
 using System.Runtime.CompilerServices;
 
@@ -11,9 +12,7 @@ namespace http_request_monitoring_system
     {
         public HttpListener listener = new HttpListener();
         public Thread listenerThread;
-        public DateTime startTime;
-        public Dictionary<string, Route> GetRouter { get; set; } = new Dictionary<string, Route>();
-        public Dictionary<string, Route> PostRouter { get; set; } = new Dictionary<string, Route>();
+        public Stopwatch uptime = new Stopwatch();
         public Dictionary<string, Dictionary<string, Route>> Router { get; set; } = new Dictionary<string, Dictionary<string, Route>>();
 
         public HttpServer()
@@ -23,10 +22,15 @@ namespace http_request_monitoring_system
 
         public void HandleRequest()
         {
+            Stopwatch stopwatch = new Stopwatch();
+
             while (this.listener.IsListening)
             {
                 HttpListenerContext context = listener.GetContext();
+                stopwatch.Start();
                 HttpListenerRequest request = context.Request;
+
+                Thread.Sleep(1000);
 
                 System.IO.Stream body = request.InputStream;
                 System.Text.Encoding encoding = request.ContentEncoding;
@@ -36,7 +40,7 @@ namespace http_request_monitoring_system
                 string method = request.HttpMethod;
                 string? route = request.RawUrl;
 
-                if (route == null)
+                if (route == null || !this.Router.ContainsKey(method))
                     responseString = $"failed to get route";
                 else if (!Router[method].ContainsKey(route))
                     responseString = $"no \"{method}\" for \"{route}\"";
@@ -50,46 +54,44 @@ namespace http_request_monitoring_system
                 System.IO.Stream output = response.OutputStream;
                 output.Write(buffer, 0, buffer.Length);
                 output.Close();
+
+                long unixTimestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalMilliseconds;
+                long processingTime = stopwatch.ElapsedMilliseconds;
+                stopwatch.Reset();
+                RequestInfo requestInfo = new RequestInfo
+                {
+                    processingTime = processingTime,
+                    dateTime = unixTimestamp
+                };
+                Program.serverActions.serverInfo.Add(method, requestInfo);
+                Program.serverActions.serverInfo.uptime = this.uptime.ElapsedMilliseconds;
             }
         }
 
-        /*
-            HttpListenerContext context = listener.GetContext();
-            HttpListenerRequest request = context.Request;
-
-            Console.WriteLine($"--METHOD--\n{request.HttpMethod}");
-
-            Console.WriteLine("--HEADERS--");
-            NameValueCollection headers = request.Headers;
-            for (int i = 0; i < headers.Count; i++)
-            {
-                Console.WriteLine($"{headers.GetKey(i)}: {headers.Get(i)}");
-            }
-
-            System.IO.Stream body = request.InputStream;
-            System.Text.Encoding encoding = request.ContentEncoding;
-            System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
-            string contents = reader.ReadToEnd();
-            Console.WriteLine($"--BODY--\n{contents}");
-        */
-
-        public void Start(int port)
+        public bool Start(int port)
         {
-            this.startTime = DateTime.UtcNow;
+            if (this.listener.IsListening)
+                return false;
+
+            this.uptime.Start();
             this.listener.Prefixes.Add($"http://localhost:{port}/");
             this.listener.Start();
             this.listenerThread.Start();
+
+            return true;
+        }
+
+        public void Stop()
+        {
+            this.uptime.Reset();
+            this.listener.Stop();
         }
 
         public long Uptime
         {
             get
             {
-                // long unixTimestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalMilliseconds;
-
-                DateTime now = DateTime.UtcNow;
-                long uptime = (long)now.Subtract(this.startTime).TotalMilliseconds;
-                return uptime;
+                return this.uptime.ElapsedMilliseconds;
             }
         }
     }

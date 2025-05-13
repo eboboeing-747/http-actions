@@ -15,10 +15,33 @@ namespace http_request_monitoring_system.Controllers
             return Ok($"server is listening on port {port}");
         }
 
+        [HttpGet("status")]
+        public ActionResult Status()
+        {
+            return Ok(Program.server.listener.IsListening);
+        }
+
+        /*
+        [HttpGet("shutdown")]
+        public ActionResult Shutdown()
+        {
+            Program.server.Stop();
+            return Ok();
+        }
+        */
+
         [HttpGet("test")]
         public ActionResult TestConcurrency()
         {
             return Ok($"thread is not blocked");
         }
+
+        /*
+        [HttpGet("stats")]
+        public ActionResult Statistics()
+        {
+
+        }
+        */
     }
 }

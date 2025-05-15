@@ -12,13 +12,20 @@ namespace http_request_monitoring_system.Controllers
             [FromBody] int port
         ) {
             Program.server.Start(port);
-            return Ok($"server is listening on port {port}");
+            return Ok($"{{\"info\": \"server is listening on port {port}\"}}");
         }
 
         [HttpGet("status")]
         public ActionResult Status()
         {
-            return Ok(Program.server.listener.IsListening);
+            string status;
+
+            if (Program.server.listener.IsListening)
+                status = $"{{\"status\": true, \"port\": \"{Program.server.port}\"}}";
+            else
+                status = "{\"status\": false}";
+
+            return Ok(status);
         }
 
         /*

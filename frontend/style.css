@@ -1,0 +1,10 @@
+main {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.server-status-display {
+    display: flex;
+    justify-content: center;
+}

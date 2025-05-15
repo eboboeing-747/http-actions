@@ -10,6 +10,7 @@ namespace http_request_monitoring_system
 
     public class HttpServer
     {
+        public int port;
         public HttpListener listener = new HttpListener();
         public Thread listenerThread;
         public Stopwatch uptime = new Stopwatch();
@@ -40,6 +41,9 @@ namespace http_request_monitoring_system
                 string method = request.HttpMethod;
                 string? route = request.RawUrl;
 
+                long unixTimestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalMilliseconds;
+                Program.serverActions.serverInfo.uptime = this.uptime.ElapsedMilliseconds;
+
                 if (route == null || !this.Router.ContainsKey(method))
                     responseString = $"failed to get route";
                 else if (!Router[method].ContainsKey(route))
@@ -48,6 +52,8 @@ namespace http_request_monitoring_system
                     responseString = this.Router[method][route](contents);
 
                 HttpListenerResponse response = context.Response;
+                // response.Headers.Add("Access-Control-Allow-Origin", "http://localhost:5500");
+                response.Headers.Add("Access-Control-Allow-Origin", "*");
                 byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
 
                 response.ContentLength64 = buffer.Length;
@@ -55,16 +61,17 @@ namespace http_request_monitoring_system
                 output.Write(buffer, 0, buffer.Length);
                 output.Close();
 
-                long unixTimestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalMilliseconds;
-                long processingTime = stopwatch.ElapsedMilliseconds;
-                stopwatch.Reset();
-                RequestInfo requestInfo = new RequestInfo
+                if (this.Router.ContainsKey(method))
                 {
-                    processingTime = processingTime,
-                    dateTime = unixTimestamp
-                };
-                Program.serverActions.serverInfo.Add(method, requestInfo);
-                Program.serverActions.serverInfo.uptime = this.uptime.ElapsedMilliseconds;
+                    long processingTime = stopwatch.ElapsedMilliseconds;
+                    stopwatch.Reset();
+                    RequestInfo requestInfo = new RequestInfo
+                    {
+                        processingTime = processingTime,
+                        dateTime = unixTimestamp
+                    };
+                    Program.serverActions.serverInfo.Add(method, requestInfo);
+                }
             }
         }
 
@@ -77,6 +84,7 @@ namespace http_request_monitoring_system
             this.listener.Prefixes.Add($"http://localhost:{port}/");
             this.listener.Start();
             this.listenerThread.Start();
+            this.port = port;
 
             return true;
         }

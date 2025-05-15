@@ -31,8 +31,6 @@ namespace http_request_monitoring_system
                 stopwatch.Start();
                 HttpListenerRequest request = context.Request;
 
-                Thread.Sleep(1000);
-
                 System.IO.Stream body = request.InputStream;
                 System.Text.Encoding encoding = request.ContentEncoding;
                 System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
@@ -54,6 +52,7 @@ namespace http_request_monitoring_system
                 HttpListenerResponse response = context.Response;
                 // response.Headers.Add("Access-Control-Allow-Origin", "http://localhost:5500");
                 response.Headers.Add("Access-Control-Allow-Origin", "*");
+                response.Headers.Add("Access-Control-Allow-Headers", "*");
                 byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
 
                 response.ContentLength64 = buffer.Length;

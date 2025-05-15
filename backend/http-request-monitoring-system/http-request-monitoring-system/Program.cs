@@ -22,16 +22,23 @@ namespace http_request_monitoring_system
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddCors(options =>
-            {
-                options.AddDefaultPolicy(
-                      policy =>
-                      {
-                          policy.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500", "https://localhost:5500", "https://127.0.0.1:5500")
-                              .AllowAnyHeader()
-                              .AllowAnyMethod()
-                              .AllowCredentials();
-                      });
-            });
+                    {
+                    options.AddDefaultPolicy(
+                            policy =>
+                            {
+                                policy.WithOrigins(
+                                    "http://127.0.0.1:5500",
+                                    "http://localhost:5500",
+                                    "https://localhost:5500",
+                                    "https://127.0.0.1:5500",
+                                    "http://localhost:8080",
+                                    "http://127.0.0.1:8080"
+                                )
+                                .AllowAnyHeader()
+                                .AllowAnyMethod()
+                                .AllowCredentials();
+                            });
+                    });
 
             // Add services to the container.
 
@@ -44,12 +51,12 @@ namespace http_request_monitoring_system
 
             // Configure the HTTP request pipeline.
             /*
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-            */
+           if (app.Environment.IsDevelopment())
+           {
+               app.UseSwagger();
+               app.UseSwaggerUI();
+           }
+           */
 
             // app.UseHttpsRedirection();
 

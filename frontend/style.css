@@ -8,3 +8,10 @@ main {
     display: flex;
     justify-content: center;
 }
+
+.server-actions-area {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+

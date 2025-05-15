@@ -66,8 +66,35 @@ async function getServerInfo() {
     let postInfo = body.graphInfo.POST;
     let overallRequestAmount = getInfo.amount + postInfo.amount;
     let overallRequestTime = getInfo.overallTime + postInfo.overallTime;
-    let serverInfoString = `uptime: ${body.uptime}\noverall requests: ${overallRequestsAmount}\n\tGET: ${getInfo.amount}\n\tPOST: ${postInfo.amount}\navarage time: ${overallRequestTime / overallRequestAmount}`;
+    let serverInfoString = `uptime: ${body.uptime}\noverall requests: ${overallRequestAmount}\n\tGET: ${getInfo.amount}\n\tPOST: ${postInfo.amount}\navarage time: ${overallRequestTime / overallRequestAmount}`;
     serverInfo.textContent = serverInfoString;
+}
+
+const sendServerDataButton = document.getElementById("send-server-data");
+sendServerDataButton.addEventListener("click", sendServerData, true);
+
+async function sendServerData() {
+    if (!SERVER_PORT)
+        return;
+
+    let serverData = document.getElementById("server-data-input").value;
+
+    const reqParams = {
+        method: "POST",
+        mode: "cors",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: serverData
+    }
+
+    let res = await fetch(`http://localhost:${SERVER_PORT}/addData`, reqParams);
+    let body = await res.json();
+
+    let dataIdDisplay = document.getElementById("server-data-id-display");
+    dataIdDisplay.textContent = `id: ${body.id}`;
+
+    console.log(body);
 }
 
 function main() {
